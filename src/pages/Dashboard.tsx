@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../store';
+import { useStore } from '../store/index';
 import { CapacityChart } from '../components/dashboard/CapacityChart';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { formatCapacityPercentage, formatDate } from '../lib/utils';
@@ -78,15 +78,16 @@ export default function Dashboard() {
     engineers && engineers.length > 0
       ? engineers.reduce((sum, eng) => {
           const capacity = capacityData?.[eng._id];
-          if (!capacity || typeof capacity.allocatedCapacity !== 'number' || typeof capacity.totalCapacity !== 'number' || capacity.totalCapacity === 0) {
+          if (!capacity || typeof capacity.allocatedCapacity !== 'number' || typeof capacity.totalCapacity !== 'number') {
             return sum;
           }
-          return sum + (capacity.allocatedCapacity / capacity.totalCapacity) * 100;
-        }, 0) / (engineers.filter(eng => {
+          // Calculate available capacity (total - allocated)
+          const availableCapacity = capacity.totalCapacity - capacity.allocatedCapacity;
+          return sum + availableCapacity;
+        }, 0) / engineers.filter(eng => {
           const capacity = capacityData?.[eng._id];
-          return capacity && typeof capacity.allocatedCapacity === 'number' && 
-                 typeof capacity.totalCapacity === 'number' && capacity.totalCapacity > 0;
-        }).length || 1)
+          return capacity && typeof capacity.allocatedCapacity === 'number' && typeof capacity.totalCapacity === 'number';
+        }).length || 1
       : 0;
 
   return (
@@ -140,6 +141,9 @@ export default function Dashboard() {
           <CardContent>
             <div className="text-2xl font-bold">
               {formatCapacityPercentage(averageTeamCapacity)}
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              Available capacity average
             </div>
           </CardContent>
         </Card>

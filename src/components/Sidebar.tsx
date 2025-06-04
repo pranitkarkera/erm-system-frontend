@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, FolderKanban, UserCircle, LogOut, ClipboardList, Briefcase } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useStore } from '../store';
+import { useStore } from '../store/index';
 import { Button } from './ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar';

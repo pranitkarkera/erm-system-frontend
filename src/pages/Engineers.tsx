@@ -15,6 +15,7 @@ export default function Engineers() {
     fetchProjects,
     fetchCapacityData,
     createAssignment,
+    fetchAssignments,
   } = useStore();
   const navigate = useNavigate();
 
@@ -25,16 +26,31 @@ export default function Engineers() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([fetchEngineers(), fetchProjects()]);
-      await fetchCapacityData();
+      try {
+        // First fetch engineers and assignments
+        await Promise.all([fetchEngineers(), fetchProjects(), fetchAssignments()]);
+        // Then fetch capacity data which depends on assignments
+        await fetchCapacityData();
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      }
     };
     loadData();
 
-    // Set up polling for capacity data
-    const intervalId = setInterval(fetchCapacityData, 30000); // Refresh every 30 seconds
+    // Set up polling for capacity data and assignments
+    const intervalId = setInterval(async () => {
+      try {
+        // First fetch assignments
+        await fetchAssignments();
+        // Then fetch capacity data which depends on assignments
+        await fetchCapacityData();
+      } catch (error) {
+        console.error('Failed to refresh data:', error);
+      }
+    }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(intervalId);
-  }, [fetchEngineers, fetchProjects, fetchCapacityData]);
+  }, [fetchEngineers, fetchProjects, fetchAssignments, fetchCapacityData]);
 
   // Get unique skills from all engineers
   const allSkills = Array.from(
@@ -106,22 +122,24 @@ export default function Engineers() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredEngineers.map((engineer) => (
-              <EngineerCard
-                key={engineer._id}
-                engineer={engineer}
-                capacityData={
-                  capacityData[engineer._id] || {
-                    engineerId: engineer._id,
-                    totalCapacity: engineer.maxCapacity || 100,
-                    allocatedCapacity: 0,
-                    availableCapacity: engineer.maxCapacity || 100
-                  }
-                }
-                onAssign={() => handleAssign(engineer._id)}
-                onViewDetails={() => handleViewDetails(engineer._id)}
-              />
-            ))}
+            {filteredEngineers.map((engineer) => {
+              const defaultCapacity = {
+                engineerId: engineer._id,
+                totalCapacity: engineer.maxCapacity || 100,
+                allocatedCapacity: 0,
+                availableCapacity: engineer.maxCapacity || 100
+              };
+              
+              return (
+                <EngineerCard
+                  key={engineer._id}
+                  engineer={engineer}
+                  capacityData={capacityData[engineer._id] || defaultCapacity}
+                  onAssign={() => handleAssign(engineer._id)}
+                  onViewDetails={() => handleViewDetails(engineer._id)}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

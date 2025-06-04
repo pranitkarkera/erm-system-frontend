@@ -61,7 +61,8 @@ export default function EngineerDetails() {
     );
   }
 
-  const availableCapacity = engineerCapacity.totalCapacity - engineerCapacity.allocatedCapacity;
+  const allocationPercentage = (engineerCapacity.allocatedCapacity / engineerCapacity.totalCapacity) * 100;
+  const availablePercentage = 100 - allocationPercentage;
 
   return (
     <div className="p-6">
@@ -118,16 +119,16 @@ export default function EngineerDetails() {
                     <div
                       className="h-2.5 rounded-full bg-blue-600"
                       style={{
-                        width: `${(engineerCapacity.allocatedCapacity / engineerCapacity.totalCapacity) * 100}%`,
+                        width: `${Math.min(allocationPercentage, 100)}%`,
                       }}
                     ></div>
                   </div>
                   <div className="flex justify-between text-sm text-gray-500">
                     <span>
-                      Allocated: {formatCapacityPercentage(engineerCapacity.allocatedCapacity)}
+                      Allocated: {formatCapacityPercentage(allocationPercentage)}
                     </span>
                     <span>
-                      Available: {formatCapacityPercentage(availableCapacity)}
+                      Available: {formatCapacityPercentage(availablePercentage)}
                     </span>
                   </div>
                 </div>

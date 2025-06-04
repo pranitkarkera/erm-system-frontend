@@ -1,104 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore } from '../store/index';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { toast } from 'sonner';
+import { toast } from 'react-hot-toast';
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useStore((state) => ({
-    login: state.login,
-    isAuthenticated: state.isAuthenticated
-  }));
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const login = useStore((state) => state.login);
+  const [loginInfo, setLoginInfo] = useState({
+    email: '',
+    password: ''
+  });
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    const { email, password } = loginInfo;
+    
+    if (!email || !password) {
+      toast.error('Email and password are required');
+      return;
+    }
 
     try {
       await login(email, password);
-      toast.success('Successfully logged in');
-      // Navigation will happen automatically due to the useEffect above
+      toast.success('Login successful');
+      // Navigation will be handled by AuthHandler
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(err.response?.data?.message || 'Invalid email or password');
-      toast.error('Login failed', {
-        description: err.response?.data?.message || 'Invalid email or password'
-      });
-    } finally {
-      setIsLoading(false);
+      toast.error(err.response?.data?.message || 'Login failed');
     }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Sign in to your account
-          </CardTitle>
+      <Card className="w-full max-w-md p-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="email" className="text-sm font-medium">
                 Email
               </label>
               <input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                name="email"
+                placeholder="Enter your email"
+                value={loginInfo.email}
+                onChange={handleChange}
                 required
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="space-y-2">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="password" className="text-sm font-medium">
                 Password
               </label>
               <input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                name="password"
+                placeholder="Enter your password"
+                value={loginInfo.password}
+                onChange={handleChange}
                 required
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+            <Button type="submit" className="w-full">
+              Login
             </Button>
-            <div className="text-center text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/signup" className="font-medium text-blue-600 hover:underline">
-                Create an account
+            <div className="text-center text-sm">
+              <span className="text-gray-600">Don't have an account? </span>
+              <Link to="/signup" className="text-blue-600 hover:underline">
+                Sign up
               </Link>
             </div>
           </form>

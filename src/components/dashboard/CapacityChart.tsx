@@ -32,17 +32,23 @@ export function CapacityChart({
       allocatedCapacity: 0,
       totalCapacity: engineer.maxCapacity || 100,
     };
+
+    // Use absolute values for allocated and available capacity
+    const allocatedCapacity = capacity.allocatedCapacity; // Already in percentage (e.g., 10%)
+    const availableCapacity = capacity.totalCapacity - allocatedCapacity; // e.g., 50% - 10% = 40%
+    const maxCapacity = capacity.totalCapacity; // e.g., 50% for part-time
+    
     return {
       name: engineer.name,
-      allocated: capacity.allocatedCapacity || 0,
-      available:
-        (capacity.totalCapacity || 0) - (capacity.allocatedCapacity || 0),
-      total: capacity.totalCapacity || 0,
+      allocated: allocatedCapacity,
+      available: availableCapacity,
+      maxCapacity: maxCapacity,
+      isPartTime: maxCapacity < 100
     };
   });
 
   // Show a loader or message if no data
-  if (!data.length || data.every((d) => d.total === 0)) {
+  if (!data.length) {
     return (
       <div className="text-center text-gray-500 py-8">
         No capacity data to display.
@@ -60,19 +66,29 @@ export function CapacityChart({
     label?: string;
   }) => {
     if (active && payload && payload.length) {
+      const maxCapacity = payload[0]?.payload?.maxCapacity || 100;
+      const isPartTime = maxCapacity < 100;
+      const allocated = payload[0]?.value || 0;
+      const available = payload[1]?.value || 0;
+      
       return (
         <div className="bg-white p-4 border rounded shadow">
           <p className="font-medium">{label}</p>
           <p className="text-sm text-gray-600">
-            Allocated: {formatCapacityPercentage(payload[0].value)}
+            Allocated: {formatCapacityPercentage(allocated)}
           </p>
           <p className="text-sm text-gray-600">
-            Available: {formatCapacityPercentage(payload[1].value)}
+            Available: {formatCapacityPercentage(available)}
           </p>
-          <p className="text-sm text-gray-600">
-            Total:{" "}
-            {formatCapacityPercentage(payload[0].value + payload[1].value)}
-          </p>
+          {isPartTime ? (
+            <p className="text-sm text-gray-600">
+              Part-time: {formatCapacityPercentage(maxCapacity)}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-600">
+              Full-time: {formatCapacityPercentage(maxCapacity)}
+            </p>
+          )}
         </div>
       );
     }
@@ -100,7 +116,16 @@ export function CapacityChart({
             textAnchor="end"
             height={80}
           />
-          <YAxis tickFormatter={(value) => `${value}%`} domain={[0, 100]} />
+          <YAxis 
+            tickFormatter={(value) => `${value}%`} 
+            domain={[0, 100]}
+            label={{ 
+              value: 'Capacity (%)', 
+              angle: -90, 
+              position: 'insideLeft',
+              style: { textAnchor: 'middle' }
+            }}
+          />
           <Tooltip content={<CustomTooltip />} />
           <Legend />
           <Bar

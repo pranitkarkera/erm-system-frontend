@@ -29,8 +29,14 @@ export function EngineerCard({
 }: EngineerCardProps) {
   const { color, text } = getCapacityStatus(capacityData);
   const allocatedCapacity = capacityData.allocatedCapacity || 0;
-  const availableCapacity = capacityData.totalCapacity - allocatedCapacity;
-  const allocationPercentage = (allocatedCapacity / capacityData.totalCapacity) * 100;
+  const totalCapacity = capacityData.totalCapacity || engineer.maxCapacity || 100;
+  const availableCapacity = totalCapacity - allocatedCapacity;
+  const isPartTime = totalCapacity < 100;
+  
+  // Calculate absolute percentages (out of 100%)
+  const absoluteAllocatedPercentage = allocatedCapacity; // This is already in percentage
+  const absoluteAvailablePercentage = availableCapacity;
+  // const maxCapacityText = isPartTime ? ` (${totalCapacity}% Part-time)` : '';
 
   return (
     <Card className="w-full max-w-sm">
@@ -59,22 +65,35 @@ export function EngineerCard({
         <div>
           <p className="text-sm font-medium text-gray-500">Capacity</p>
           <div className="mt-2 space-y-2">
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div className="relative w-full bg-gray-200 rounded-full h-2.5">
+              {isPartTime && (
+                <div
+                  className="absolute top-0 bottom-0 right-0 bg-gray-300 rounded-r-full"
+                  style={{
+                    width: `${100 - totalCapacity}%`,
+                  }}
+                />
+              )}
               <div
                 className="h-2.5 rounded-full bg-blue-600"
                 style={{
-                  width: `${allocationPercentage}%`,
+                  width: `${absoluteAllocatedPercentage}%`,
                 }}
-              ></div>
+              />
             </div>
             <div className="flex justify-between text-xs text-gray-500">
               <span>
-                Allocated: {formatCapacityPercentage(allocatedCapacity)}
+                Allocated: {formatCapacityPercentage(absoluteAllocatedPercentage)}
               </span>
               <span>
-                Available: {formatCapacityPercentage(availableCapacity)}
+                Available: {formatCapacityPercentage(absoluteAvailablePercentage)}
               </span>
             </div>
+            {/* {isPartTime && (
+              <div className="text-xs text-gray-500 text-center">
+                Maximum Capacity: {formatCapacityPercentage(totalCapacity)}
+              </div>
+            )} */}
           </div>
         </div>
         <div>
