@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
+import { useStore } from '../../store';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { ChevronLeft } from 'lucide-react';
-import { formatCapacityPercentage, getSkillBadgeColor } from '../lib/utils';
+import { formatCapacityPercentage, getSkillBadgeColor } from '../../lib/utils';
 
 export default function EngineerDetails() {
   const { id } = useParams<{ id: string }>();

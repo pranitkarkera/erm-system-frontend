@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { formatDate } from '../lib/utils';
+import { useStore } from '../../store';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { formatDate } from '../../lib/utils';
 import { ChevronLeft } from 'lucide-react';
 
 export default function ProjectDetails() {

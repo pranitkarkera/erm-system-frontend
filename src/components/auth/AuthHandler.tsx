@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useStore } from '../store/index';
+import { useStore } from '../../store/index';
 
 export const AuthHandler = () => {
   const location = useLocation();

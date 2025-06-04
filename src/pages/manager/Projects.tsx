@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useStore } from '../store/index';
-import { ProjectCard } from '../components/projects/ProjectCard';
-import { Button } from '../components/ui/Button';
-import { AssignmentForm } from '../components/assignments/AssignmentForm';
-import { ProjectForm } from '../components/projects/ProjectForm';
-import type { ProjectStatus } from '../types';
+import { useStore } from '../../store/index';
+import { ProjectCard } from '../../components/projects/ProjectCard';
+import { Button } from '../../components/ui/Button';
+import { AssignmentForm } from '../../components/assignments/AssignmentForm';
+import { ProjectForm } from '../../components/projects/ProjectForm';
+import type { ProjectStatus } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 

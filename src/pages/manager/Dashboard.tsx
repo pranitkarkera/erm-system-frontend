@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../store/index';
-import { CapacityChart } from '../components/dashboard/CapacityChart';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { formatCapacityPercentage, formatDate } from '../lib/utils';
+import { useStore } from '../../store/index';
+import { CapacityChart } from '../../components/dashboard/CapacityChart';
+import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
+import { formatCapacityPercentage, formatDate } from '../../lib/utils';
 import type { Project, Assignment, User } from '@/types';
-import { Skeleton } from '../components/ui/Skeleton';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function Dashboard() {
   const {

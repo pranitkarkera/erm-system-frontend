@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { useStore } from "../store";
+import { useStore } from "../../store";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-} from "../components/ui/Card";
-import { Button } from "../components/ui/Button";
-import { AssignmentForm } from "../components/assignments/AssignmentForm";
-import { formatDate, formatCapacityPercentage } from "../lib/utils";
-import { Skeleton } from "../components/ui/Skeleton";
-import { Assignment, User, Project } from "../types";
+} from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { AssignmentForm } from "../../components/assignments/AssignmentForm";
+import { formatDate, formatCapacityPercentage } from "../../lib/utils";
+import { Skeleton } from "../../components/ui/Skeleton";
+import { Assignment, User, Project } from "../../types";
 
 interface PopulatedAssignment extends Omit<Assignment, 'engineerId' | 'projectId'> {
   engineerId: string | User;
@@ -59,11 +59,11 @@ export default function Assignments() {
   const filteredAssignments = (assignments as PopulatedAssignment[]).filter((assignment) => {
     const engineerName = typeof assignment.engineerId === 'object' 
       ? assignment.engineerId.name 
-      : engineers.find((e) => e._id === assignment.engineerId)?.name || '';
+      : engineers.find((e) => e._id === assignment.engineerId)?.name || 'Unknown Engineer';
 
     const projectName = typeof assignment.projectId === 'object'
       ? assignment.projectId.name
-      : projects.find((p) => p._id === assignment.projectId)?.name || '';
+      : projects.find((p) => p._id === assignment.projectId)?.name || 'Unknown Project';
 
     const matchesSearch = (
       engineerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -150,28 +150,28 @@ export default function Assignments() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Assignments</h1>
-          <Button onClick={() => setShowAssignmentForm(true)}>
-            Create Assignment
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl font-bold">Assignments</h1>
+        <Button onClick={() => setShowAssignmentForm(true)}>
+          Create Assignment
+        </Button>
+      </div>
 
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search assignments..."
-                className="w-full px-4 py-2 border rounded-md"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4">
+          <div className="w-full">
+            <input
+              type="text"
+              placeholder="Search assignments..."
+              className="w-full px-4 py-2 border rounded-md"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
             <select
-              className="px-4 py-2 border rounded-md"
+              className="w-full sm:w-auto px-4 py-2 border rounded-md"
               value={selectedEngineer}
               onChange={handleEngineerChange}
             >
@@ -183,7 +183,7 @@ export default function Assignments() {
               ))}
             </select>
             <select
-              className="px-4 py-2 border rounded-md"
+              className="w-full sm:w-auto px-4 py-2 border rounded-md"
               value={selectedProject}
               onChange={handleProjectChange}
             >
@@ -195,70 +195,72 @@ export default function Assignments() {
               ))}
             </select>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredAssignments.map((assignment) => {
-              const engineerName = typeof assignment.engineerId === 'object' 
-                ? assignment.engineerId.name 
-                : engineers.find((e) => e._id === assignment.engineerId)?.name || 'Unknown Engineer';
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredAssignments.map((assignment) => {
+            const engineerName = typeof assignment.engineerId === 'object'
+              ? assignment.engineerId.name
+              : engineers.find((e) => e._id === assignment.engineerId)?.name || 'Unknown Engineer';
 
-              const projectName = typeof assignment.projectId === 'object'
-                ? assignment.projectId.name
-                : projects.find((p) => p._id === assignment.projectId)?.name || 'Unknown Project';
+            const projectName = typeof assignment.projectId === 'object'
+              ? assignment.projectId.name
+              : projects.find((p) => p._id === assignment.projectId)?.name || 'Unknown Project';
 
-              return (
-                <Card key={assignment._id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{engineerName}</CardTitle>
-                        <div className="text-sm text-gray-500">{projectName}</div>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDeleteAssignment(assignment._id)}
-                      >
-                        Delete
-                      </Button>
+            return (
+              <Card key={assignment._id} className="flex flex-col">
+                <CardHeader>
+                  <CardTitle className="text-lg">{projectName}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 flex-1">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Engineer</p>
+                    <p className="text-base">{engineerName}</p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Role</p>
+                      <p className="text-sm text-gray-900">{assignment.role}</p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <div className="text-sm font-medium">Role</div>
-                        <div className="text-gray-600">{assignment.role}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Allocation</div>
-                        <div className="text-gray-600">{assignment.allocationPercentage}%</div>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Duration</div>
-                        <div className="text-gray-600">
-                          {formatDate(assignment.startDate)} - {formatDate(assignment.endDate)}
-                        </div>
-                      </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-500">Allocation</p>
+                      <p className="text-sm text-gray-900">{assignment.allocationPercentage}%</p>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                    <div className="col-span-2 sm:col-span-1">
+                      <p className="text-sm font-medium text-gray-500">Duration</p>
+                      <p className="text-sm text-gray-900">
+                        {formatDate(assignment.startDate)} - {formatDate(assignment.endDate)}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="w-full mt-4"
+                    onClick={() => handleDeleteAssignment(assignment._id)}
+                  >
+                    Delete Assignment
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
       {showAssignmentForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md p-6 bg-white rounded-lg">
-            <h2 className="mb-4 text-xl font-bold">Create Assignment</h2>
-            <AssignmentForm
-              engineers={engineers}
-              projects={projects}
-              capacityData={capacityData}
-              onSubmit={handleCreateAssignment}
-              onCancel={handleCloseAssignmentForm}
-            />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="w-full max-w-lg bg-white rounded-lg overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-bold mb-4">Create Assignment</h2>
+              <AssignmentForm
+                engineers={engineers}
+                projects={projects}
+                capacityData={capacityData}
+                onSubmit={handleCreateAssignment}
+                onCancel={handleCloseAssignmentForm}
+              />
+            </div>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/index";
 import { Toaster } from "react-hot-toast";
-import { AuthHandler } from "./components/AuthHandler";
+import { AuthHandler } from "./components/auth/AuthHandler";
 
 function App() {
   return (

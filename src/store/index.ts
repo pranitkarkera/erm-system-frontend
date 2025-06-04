@@ -129,10 +129,10 @@ export const useStore = create<Store>((set, get) => ({
       const response = await axios.get(`/assignments`);
       const assignments = response.data.map((assignment: any) => ({
         ...assignment,
-        engineerId: assignment.engineerId?._id || assignment.engineerId,
-        projectId: assignment.projectId?._id || assignment.projectId,
-        engineerName: assignment.engineerId?.name || "Unknown Engineer",
-        projectName: assignment.projectId?.name || "Unknown Project",
+        engineerId: assignment.engineerId,
+        projectId: assignment.projectId,
+        engineerName: typeof assignment.engineerId === 'object' ? assignment.engineerId.name : "Unknown Engineer",
+        projectName: typeof assignment.projectId === 'object' ? assignment.projectId.name : "Unknown Project",
       }));
       set({ assignments });
     } catch (err) {

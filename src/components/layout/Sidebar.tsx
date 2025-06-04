@@ -1,18 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FolderKanban, UserCircle, LogOut, ClipboardList, Briefcase } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { useStore } from '../store/index';
-import { Button } from './ui/Button';
+import { LayoutDashboard, Users, FolderKanban, UserCircle, LogOut, ClipboardList, Briefcase, Menu, X } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { useStore } from '../../store/index';
+import { Button } from '../ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/Avatar';
-import { Separator } from './ui/Separator';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/Avatar';
+import { Separator } from '../ui/Separator';
 
 export function Sidebar() {
   const { user, logout } = useStore();
   const navigate = useNavigate();
   const isManager = user?.role === 'manager';
   const isEngineer = user?.role === 'engineer';
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -27,15 +28,23 @@ export function Sidebar() {
       .toUpperCase() || 'U';
   };
 
-  return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
-      <div className="p-4">
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  const NavContent = () => (
+    <div className="flex flex-col min-h-full">
+      <div className="flex-shrink-0 p-4">
         <h1 className="text-2xl font-bold text-gray-900">ERM System</h1>
       </div>
 
-      <nav className="flex-1 p-4">
+      <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
-          {/* Dashboard only shown to managers */}
+          {/* Navigation items */}
           {isManager && (
             <li>
               <NavLink
@@ -46,6 +55,7 @@ export function Sidebar() {
                     isActive && "bg-gray-100 text-gray-900"
                   )
                 }
+                onClick={closeMobileMenu}
               >
                 <LayoutDashboard className="h-5 w-5" />
                 <span>Dashboard</span>
@@ -53,7 +63,6 @@ export function Sidebar() {
             </li>
           )}
 
-          {/* Engineers section only shown to managers */}
           {isManager && (
             <li>
               <NavLink
@@ -64,6 +73,7 @@ export function Sidebar() {
                     isActive && "bg-gray-100 text-gray-900"
                   )
                 }
+                onClick={closeMobileMenu}
               >
                 <Users className="h-5 w-5" />
                 <span>Engineers</span>
@@ -71,7 +81,6 @@ export function Sidebar() {
             </li>
           )}
 
-          {/* My Projects section only shown to engineers */}
           {isEngineer && (
             <li>
               <NavLink
@@ -82,6 +91,7 @@ export function Sidebar() {
                     isActive && "bg-gray-100 text-gray-900"
                   )
                 }
+                onClick={closeMobileMenu}
               >
                 <Briefcase className="h-5 w-5" />
                 <span>My Projects</span>
@@ -89,7 +99,6 @@ export function Sidebar() {
             </li>
           )}
 
-          {/* Projects and Assignments sections only shown to managers */}
           {isManager && (
             <>
               <li>
@@ -101,6 +110,7 @@ export function Sidebar() {
                       isActive && "bg-gray-100 text-gray-900"
                     )
                   }
+                  onClick={closeMobileMenu}
                 >
                   <FolderKanban className="h-5 w-5" />
                   <span>Projects</span>
@@ -115,6 +125,7 @@ export function Sidebar() {
                       isActive && "bg-gray-100 text-gray-900"
                     )
                   }
+                  onClick={closeMobileMenu}
                 >
                   <ClipboardList className="h-5 w-5" />
                   <span>Assignments</span>
@@ -125,13 +136,15 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      <div className="mt-auto">
-        <Separator />
+      <div className="flex-shrink-0 border-t border-gray-200">
         <div className="p-4">
           <Button
             variant="ghost"
             className="w-full flex items-center gap-3 mb-2 hover:bg-gray-100"
-            onClick={() => navigate("/profile")}
+            onClick={() => {
+              navigate("/profile");
+              closeMobileMenu();
+            }}
           >
             <Avatar className="h-10 w-10">
               <AvatarFallback>{getInitials(user?.name || '')}</AvatarFallback>
@@ -157,5 +170,51 @@ export function Sidebar() {
         </div>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden fixed top-4 left-4 z-50">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-10 h-10 rounded-full bg-white shadow-md"
+          onClick={toggleMobileMenu}
+        >
+          {isMobileMenuOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
+        </Button>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 lg:hidden bg-black bg-opacity-50 transition-opacity",
+          isMobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={closeMobileMenu}
+      >
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 w-64 bg-white transform transition-transform duration-300 ease-in-out",
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <NavContent />
+        </div>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex h-screen w-64 bg-white border-r border-gray-200">
+        <div className="w-full">
+          <NavContent />
+        </div>
+      </div>
+    </>
   );
 } 
