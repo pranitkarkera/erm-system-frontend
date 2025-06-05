@@ -1,22 +1,8 @@
 import React, { useEffect, useMemo } from "react";
-import { useStore } from "../store";
-import { formatDate } from "../lib/utils";
+import { useStore } from "../../store";
+import { formatDate } from "../../lib/utils";
 import { Navigate } from "react-router-dom";
-
-interface Project {
-  _id: string;
-  name: string;
-  description: string;
-  status: "active" | "completed" | "pending";
-  startDate: string;
-  endDate: string;
-  requiredSkills: string[];
-  teamSize: number;
-  managerId: {
-    name: string;
-    email: string;
-  };
-}
+import { Project } from "../../types";
 
 interface User {
   _id: string;
@@ -37,14 +23,26 @@ export default function MyProjects() {
   useEffect(() => {
     const loadData = async () => {
       if (!user?._id) return;
-      await Promise.all([fetchProjects(), fetchAssignments()]);
+      console.log('Current user:', user);
+      try {
+        const [projectsData, assignmentsData] = await Promise.all([
+          fetchProjects(),
+          fetchAssignments()
+        ]);
+        console.log('Loaded data:', { projectsData, assignmentsData });
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
     };
     loadData();
   }, [fetchProjects, fetchAssignments, user]);
 
   const myProjects = useMemo(() => {
     if (!user?._id) return [];
-    return getEngineerProjects(user._id);
+    console.log('Getting projects for user ID:', user._id);
+    const projects = getEngineerProjects(user._id);
+    console.log('Found projects:', projects);
+    return projects;
   }, [user, getEngineerProjects]);
 
   if (!user) {

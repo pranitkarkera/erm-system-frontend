@@ -117,27 +117,28 @@ export const useStore = create<Store>((set, get) => ({
   fetchProjects: async () => {
     try {
       const res = await axios.get(`/projects`);
-      set({ projects: Array.isArray(res.data) ? res.data : [] });
+      console.log('Raw projects from API:', res.data);
+      const projects = Array.isArray(res.data) ? res.data : [];
+      set({ projects });
+      return projects;
     } catch (err) {
       console.error("Fetch projects failed:", err);
       set({ projects: [] });
+      return [];
     }
   },
 
   fetchAssignments: async () => {
     try {
       const response = await axios.get(`/assignments`);
-      const assignments = response.data.map((assignment: any) => ({
-        ...assignment,
-        engineerId: assignment.engineerId,
-        projectId: assignment.projectId,
-        engineerName: typeof assignment.engineerId === 'object' ? assignment.engineerId.name : "Unknown Engineer",
-        projectName: typeof assignment.projectId === 'object' ? assignment.projectId.name : "Unknown Project",
-      }));
+      console.log('Raw assignments from API:', response.data);
+      const assignments = Array.isArray(response.data) ? response.data : [];
       set({ assignments });
+      return assignments;
     } catch (err) {
       console.error("Fetch assignments failed:", err);
       set({ assignments: [] });
+      return [];
     }
   },
 
@@ -213,10 +214,36 @@ export const useStore = create<Store>((set, get) => ({
 
   getEngineerProjects: (engineerId: string) => {
     const state = get();
-    const engineerAssignments = state.assignments.filter(
-      (assignment) => assignment.engineerId === engineerId
+    console.log('Looking for projects for engineer:', engineerId);
+    console.log('Available assignments:', state.assignments);
+    console.log('Available projects:', state.projects);
+
+    // Find assignments for this engineer
+    const engineerAssignments = state.assignments.filter(assignment => {
+      const assignmentEngineerId = assignment.engineerId?._id || assignment.engineerId;
+      console.log('Comparing engineer IDs:', { 
+        assignmentEngineerId, 
+        engineerId, 
+        match: assignmentEngineerId === engineerId 
+      });
+      return assignmentEngineerId === engineerId;
+    });
+    
+    console.log('Found engineer assignments:', engineerAssignments);
+
+    // Get project IDs from assignments
+    const projectIds = engineerAssignments.map(assignment => 
+      assignment.projectId?._id || assignment.projectId
     );
-    const projectIds = engineerAssignments.map((assignment) => assignment.projectId);
-    return state.projects.filter((project) => projectIds.includes(project._id));
+    
+    console.log('Project IDs to look for:', projectIds);
+
+    // Find the actual projects
+    const engineerProjects = state.projects.filter(project => 
+      projectIds.includes(project._id)
+    );
+
+    console.log('Final projects found:', engineerProjects);
+    return engineerProjects;
   },
 }));  

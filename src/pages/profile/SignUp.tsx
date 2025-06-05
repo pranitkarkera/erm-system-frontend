@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '../../components/ui/RadioGroup';
 import { Label } from '../../components/ui/Label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/Select';
 import type { UserRole, SeniorityLevel } from '@/types';
+import { toast } from 'react-hot-toast';
 
 type CapacityType = 'fulltime' | 'parttime';
 
@@ -23,7 +24,11 @@ export default function SignUp() {
   const [department, setDepartment] = useState('');
   const [seniority, setSeniority] = useState<SeniorityLevel>('mid');
   const [capacityType, setCapacityType] = useState<CapacityType>('fulltime');
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{
+    email?: string;
+    password?: string;
+    general?: string;
+  }>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,31 +70,47 @@ export default function SignUp() {
     setSkills(skills.filter(skill => skill !== skillToRemove));
   };
 
+  // Client-side validation
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+    
+    // Email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      newErrors.password = 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+
+    // Required fields validation
+    if (!name.trim()) {
+      newErrors.general = 'Name is required';
+    }
+
+    if (role === 'engineer' && skills.length === 0) {
+      newErrors.general = 'Please add at least one skill';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Validate required fields
-      if (role === "engineer" && skills.length === 0) {
-        setError("Please add at least one skill");
-        setIsLoading(false);
-        return;
-      }
-
       const maxCapacity = capacityType === "fulltime" ? 100 : 50;
-
-      console.log("Form Data:", {
-        name,
-        email,
-        password,
-        role,
-        skills,
-        department,
-        seniority,
-        maxCapacity,
-      });
 
       await signUp(
         name,
@@ -102,12 +123,16 @@ export default function SignUp() {
         maxCapacity
       );
       
-      await fetchEngineers(); // Refetch the engineers list after signup
-
+      await fetchEngineers();
+      toast.success('Account created successfully!');
       navigate("/login");
-    } catch (err) {
+    } catch (err: any) {
       console.error('Signup Error:', err);
-      setError('Failed to create account');
+      const errorMessage = err.response?.data?.message || 'Failed to create account';
+      setErrors({
+        general: errorMessage
+      });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -141,9 +166,12 @@ export default function SignUp() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                className={`w-full px-3 py-2 border rounded-md ${errors.email ? 'border-red-500' : ''}`}
                 required
               />
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -152,9 +180,13 @@ export default function SignUp() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
+                className={`w-full px-3 py-2 border rounded-md ${errors.password ? 'border-red-500' : ''}`}
                 required
               />
+              {errors.password && (
+                <p className="text-sm text-red-500">{errors.password}</p>
+              )}
+              
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
@@ -203,24 +235,20 @@ export default function SignUp() {
                     onChange={handleSkillsChange}
                     onKeyDown={handleSkillAdd}
                     className="w-full px-3 py-2 border rounded-md"
-                    placeholder="Type skill and press Enter or use commas"
-                    aria-describedby="skills-hint"
+                    placeholder="Type skills and press Enter (comma separated)"
                   />
-                  <p id="skills-hint" className="text-sm text-gray-500">
-                    Press Enter after each skill or separate multiple skills with commas
-                  </p>
                   {skills.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {skills.map((skill, index) => (
+                      {skills.map((skill) => (
                         <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full"
+                          key={skill}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
                         >
                           {skill}
                           <button
                             type="button"
                             onClick={() => removeSkill(skill)}
-                            className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                            className="ml-1 text-blue-600 hover:text-blue-800"
                           >
                             ×
                           </button>
@@ -229,35 +257,35 @@ export default function SignUp() {
                     </div>
                   )}
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Department</Label>
+                  <input
+                    id="department"
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md"
+                    required
+                    placeholder="e.g., Frontend, Backend, DevOps"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="seniority">Seniority Level</Label>
+                  <Select value={seniority} onValueChange={(value) => setSeniority(value as SeniorityLevel)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select seniority level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="junior">Junior</SelectItem>
+                      <SelectItem value="mid">Mid-Level</SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <input
-                id="department"
-                type="text"
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md"
-                required
-                placeholder="e.g., Frontend, Backend, DevOps"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="seniority">Seniority Level</Label>
-              <Select value={seniority} onValueChange={(value) => setSeniority(value as SeniorityLevel)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select seniority level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="junior">Junior</SelectItem>
-                  <SelectItem value="mid">Mid-Level</SelectItem>
-                  <SelectItem value="senior">Senior</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
+            {errors.general && (
+              <p className="text-sm text-red-600">{errors.general}</p>
             )}
             <Button
               type="submit"

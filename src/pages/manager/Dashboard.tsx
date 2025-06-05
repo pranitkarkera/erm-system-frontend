@@ -209,28 +209,36 @@ export default function Dashboard() {
             <div className="space-y-4">
               {assignments
                 .slice(0, 5)
-                .map((assignment) => (
-                  <div
-                    key={assignment._id}
-                    className="flex items-center justify-between p-4 border rounded"
-                  >
-                    <div>
-                      <h3 className="font-medium">
-                        {assignment.engineerName || 'Unknown'} → {assignment.projectName || 'Unknown Project'}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {assignment.role} (
-                        {formatCapacityPercentage(
-                          assignment.allocationPercentage
-                        )}
-                        )
-                      </p>
+                .map((assignment) => {
+                  // Get engineer name
+                  const engineerName = typeof assignment.engineerId === 'object' && assignment.engineerId
+                    ? assignment.engineerId.name
+                    : engineers.find(e => e._id === assignment.engineerId)?.name || 'Unknown Engineer';
+
+                  // Get project name
+                  const projectName = typeof assignment.projectId === 'object' && assignment.projectId
+                    ? assignment.projectId.name
+                    : projects.find(p => p._id === assignment.projectId)?.name || 'Unknown Project';
+
+                  return (
+                    <div
+                      key={assignment._id}
+                      className="flex items-center justify-between p-4 border rounded"
+                    >
+                      <div>
+                        <h3 className="font-medium">
+                          {engineerName} → {projectName}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          Allocation: {formatCapacityPercentage(assignment.allocationPercentage)}
+                        </p>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {formatDate(assignment.startDate)}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {formatDate(assignment.startDate)}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               {assignments.length === 0 && (
                 <div className="text-center text-gray-500">No assignments found</div>
               )}

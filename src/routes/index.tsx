@@ -9,7 +9,7 @@ import Assignments from '../pages/manager/Assignments';
 import Login from '../pages/profile/Login';
 import SignUp from '../pages/profile/SignUp';
 import Profile from '../pages/profile/Profile';
-import MyProjects from '../components/projects/MyProjects';
+import MyProjects from '../pages/engineer/MyProjects';
 import { Sidebar } from '../components/layout/Sidebar';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {

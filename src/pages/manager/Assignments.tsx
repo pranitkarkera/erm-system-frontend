@@ -57,24 +57,45 @@ export default function Assignments() {
   }, [fetchAssignments, fetchEngineers, fetchProjects, fetchCapacityData]);
 
   const filteredAssignments = (assignments as PopulatedAssignment[]).filter((assignment) => {
-    const engineerName = typeof assignment.engineerId === 'object' 
-      ? assignment.engineerId.name 
-      : engineers.find((e) => e._id === assignment.engineerId)?.name || 'Unknown Engineer';
+    let engineerName = 'Unknown Engineer';
+    let projectName = 'Unknown Project';
 
-    const projectName = typeof assignment.projectId === 'object'
-      ? assignment.projectId.name
-      : projects.find((p) => p._id === assignment.projectId)?.name || 'Unknown Project';
+    // Safely get engineer name
+    if (typeof assignment.engineerId === 'object' && assignment.engineerId) {
+      engineerName = assignment.engineerId.name;
+    } else {
+      const engineer = engineers.find((e) => e._id === assignment.engineerId);
+      if (engineer) {
+        engineerName = engineer.name;
+      }
+    }
+
+    // Safely get project name
+    if (typeof assignment.projectId === 'object' && assignment.projectId) {
+      projectName = assignment.projectId.name;
+    } else {
+      const project = projects.find((p) => p._id === assignment.projectId);
+      if (project) {
+        projectName = project.name;
+      }
+    }
 
     const matchesSearch = (
       engineerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       projectName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const matchesEngineer = !selectedEngineer || 
-      (typeof assignment.engineerId === 'object' ? assignment.engineerId._id : assignment.engineerId) === selectedEngineer;
+    const matchesEngineer = !selectedEngineer || (
+      typeof assignment.engineerId === 'object' 
+        ? assignment.engineerId?._id === selectedEngineer
+        : assignment.engineerId === selectedEngineer
+    );
     
-    const matchesProject = !selectedProject || 
-      (typeof assignment.projectId === 'object' ? assignment.projectId._id : assignment.projectId) === selectedProject;
+    const matchesProject = !selectedProject || (
+      typeof assignment.projectId === 'object'
+        ? assignment.projectId?._id === selectedProject
+        : assignment.projectId === selectedProject
+    );
 
     return matchesSearch && matchesEngineer && matchesProject;
   });
