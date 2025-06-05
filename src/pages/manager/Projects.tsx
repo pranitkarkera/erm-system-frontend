@@ -201,8 +201,8 @@ export default function Projects() {
                 try {
                   const assignmentData = {
                     ...formData,
-                    startDate: new Date(formData.startDate),
-                    endDate: new Date(formData.endDate),
+                    startDate: new Date(formData.startDate).toISOString(),
+                    endDate: new Date(formData.endDate).toISOString(),
                   };
                   await createAssignment(assignmentData);
                   handleCloseAssignmentForm();

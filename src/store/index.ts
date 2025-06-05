@@ -184,7 +184,14 @@ export const useStore = create<Store>((set, get) => ({
 
   createAssignment: async (assignment) => {
     try {
-      await axios.post(`/assignments`, assignment);
+      // Format dates properly
+      const formattedAssignment = {
+        ...assignment,
+        startDate: new Date(assignment.startDate).toISOString(),
+        endDate: new Date(assignment.endDate).toISOString()
+      };
+      
+      await axios.post(`/assignments`, formattedAssignment);
       await Promise.all([get().fetchAssignments(), get().fetchCapacityData()]);
     } catch (err) {
       console.error("Create assignment failed:", err);

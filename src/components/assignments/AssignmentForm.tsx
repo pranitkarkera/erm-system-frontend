@@ -22,9 +22,24 @@ const assignmentSchema = z.object({
   allocationPercentage: z.number()
     .min(1, 'Allocation must be at least 1%')
     .max(100, 'Allocation cannot exceed 100%'),
-  startDate: z.string().min(1, 'Start date is required'),
-  endDate: z.string().min(1, 'End date is required'),
+  startDate: z.string()
+    .min(1, 'Start date is required')
+    .refine((date) => !isNaN(new Date(date).getTime()), {
+      message: 'Invalid start date',
+    }),
+  endDate: z.string()
+    .min(1, 'End date is required')
+    .refine((date) => !isNaN(new Date(date).getTime()), {
+      message: 'Invalid end date',
+    }),
   role: z.string().min(1, 'Role is required'),
+}).refine((data) => {
+  const startDate = new Date(data.startDate);
+  const endDate = new Date(data.endDate);
+  return endDate > startDate;
+}, {
+  message: 'End date must be after start date',
+  path: ['endDate'],
 });
 
 type AssignmentFormData = z.infer<typeof assignmentSchema>;
@@ -77,17 +92,44 @@ export function AssignmentForm({
     if (selectedProjectId) {
       const selectedProject = projects.find(p => p._id === selectedProjectId);
       if (selectedProject) {
-        setValue('startDate', new Date(selectedProject.startDate).toISOString().split('T')[0]);
-        setValue('endDate', new Date(selectedProject.endDate).toISOString().split('T')[0]);
+        // Convert project dates to YYYY-MM-DD format
+        const startDate = new Date(selectedProject.startDate).toISOString().split('T')[0];
+        const endDate = new Date(selectedProject.endDate).toISOString().split('T')[0];
+        
+        setValue('startDate', startDate);
+        setValue('endDate', endDate);
       }
     }
   }, [selectedProjectId, projects, setValue]);
 
   const onFormSubmit = handleSubmit(async (data) => {
-    if (!isValidAllocation) {
-      return;
+    try {
+      if (!isValidAllocation) {
+        alert('Invalid allocation percentage. Please check engineer capacity.');
+        return;
+      }
+
+      // Get the selected project's dates
+      const selectedProject = projects.find(p => p._id === data.projectId);
+      if (!selectedProject) {
+        alert('Please select a valid project');
+        return;
+      }
+
+      // Format the data
+      const formattedData = {
+        ...data,
+        allocationPercentage: Number(data.allocationPercentage),
+        startDate: new Date(selectedProject.startDate).toISOString(),
+        endDate: new Date(selectedProject.endDate).toISOString(),
+      };
+
+      await onSubmit(formattedData);
+    } catch (error: any) {
+      console.error('Assignment submission error:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to create assignment. Please check all fields and try again.';
+      alert(errorMessage);
     }
-    await onSubmit(data);
   });
 
   return (
@@ -151,6 +193,11 @@ export function AssignmentForm({
             className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             disabled
           />
+          {errors.startDate?.message && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.startDate.message}
+            </p>
+          )}
         </div>
 
         <div>
@@ -163,6 +210,11 @@ export function AssignmentForm({
             className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             disabled
           />
+          {errors.endDate?.message && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.endDate.message}
+            </p>
+          )}
         </div>
 
         <div>
